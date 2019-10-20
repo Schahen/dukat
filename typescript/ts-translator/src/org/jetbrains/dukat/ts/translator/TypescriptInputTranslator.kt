@@ -24,12 +24,7 @@ import org.jetbrains.dukat.nodeIntroduction.lowerThisType
 import org.jetbrains.dukat.nodeIntroduction.lowerUnionType
 import org.jetbrains.dukat.nodeIntroduction.resolveModuleAnnotations
 import org.jetbrains.dukat.translator.InputTranslator
-import org.jetbrains.dukat.tsLowerings.desugarArrayDeclarations
-import org.jetbrains.dukat.tsLowerings.eliminateStringType
-import org.jetbrains.dukat.tsLowerings.filterOutNonDeclarations
-import org.jetbrains.dukat.tsLowerings.generateInterfaceReferences
-import org.jetbrains.dukat.tsLowerings.resolveDefaultTypeParams
-import org.jetbrains.dukat.tsLowerings.resolveTypescriptUtilityTypes
+import org.jetbrains.dukat.tsLowerings.*
 import org.jetbrains.dukat.tsmodel.SourceBundleDeclaration
 import org.jetbrains.dukat.tsmodel.SourceSetDeclaration
 import org.jetrbains.dukat.nodeLowering.lowerings.introduceMissedOverloads
@@ -54,6 +49,7 @@ interface TypescriptInputTranslator<T> : InputTranslator<T> {
                 .generateInterfaceReferences()
                 .eliminateStringType()
                 .desugarArrayDeclarations()
+                .cleanupDotNames()
                 .introduceNodes(moduleNameResolver)
                 .introduceTypeNodes()
                 .introduceQualifiedNode()
