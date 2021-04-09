@@ -8,6 +8,7 @@ import org.jetbrains.dukat.astModel.MemberModel
 import org.jetbrains.dukat.astModel.MethodModel
 import org.jetbrains.dukat.astModel.ModuleModel
 import org.jetbrains.dukat.astModel.TypeModel
+import org.jetbrains.dukat.astModel.TypeParameterModel
 import org.jetbrains.dukat.astModel.TypeParameterReferenceModel
 import org.jetbrains.dukat.astModel.TypeValueModel
 import org.jetbrains.dukat.ownerContext.NodeOwner
@@ -18,15 +19,36 @@ private fun TypeModel.collectTypeParams(): List<NameEntity> {
         is TypeParameterReferenceModel -> listOf(this.name)
         is TypeValueModel -> params.flatMap { it.type.collectTypeParams() }
         is FunctionTypeModel -> parameters.flatMap { it.type.collectTypeParams() } + type.collectTypeParams()
+        is TypeParameterModel -> type.collectTypeParams()
         else -> emptyList()
     }
 }
 
 class RemoveRedundantTypeParamsLowering: TopLevelModelLowering {
+
+    private fun getTypeParamsDependencies(typeParam: NameEntity, allTypeParams: List<TypeParameterModel>): List<NameEntity> {
+        return allTypeParams.find { (it.type as? TypeValueModel)?.value == typeParam }?.constraints?.flatMap {
+            it.collectTypeParams()
+        }.orEmpty()
+    }
+
+    private fun getUsedTypeParams(methodModel: MethodModel, alreadyKnownUsed: List<NameEntity>): List<NameEntity> {
+        val dependencies = alreadyKnownUsed.flatMap { getTypeParamsDependencies(it, methodModel.typeParameters) }.distinct()
+        if (alreadyKnownUsed.containsAll(dependencies)) {
+            return alreadyKnownUsed
+        }
+        return getUsedTypeParams(methodModel, (alreadyKnownUsed + dependencies).distinct())
+    }
+
+    private fun getUsedTypeParams(methodModel: MethodModel): List<NameEntity> {
+        val fromTypes = (methodModel.parameters.flatMap { it.type.collectTypeParams() } + methodModel.type.collectTypeParams()).distinct()
+        return getUsedTypeParams(methodModel, fromTypes)
+    }
+
     private fun lowerMethodModel(ownerContext: NodeOwner<MethodModel>): MethodModel {
         val methodModel = ownerContext.node
 
-        val usedTypeParams  = (methodModel.parameters.flatMap { it.type.collectTypeParams() } + methodModel.type.collectTypeParams())
+        val usedTypeParams = getUsedTypeParams(methodModel)
         val typeParamsResolved = methodModel.typeParameters.filter { typeParameterModel ->
             val type = typeParameterModel.type
             if (type is TypeValueModel) {
