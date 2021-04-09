@@ -34,6 +34,22 @@ where possible options include:
     -v, -version                    print version
 ```
 
+# How to use from Gradle
+
+Dukat will automatically run for npm dependencies by specifying the following in `build.gradle`:
+```
+kotlin.js.experimental.generateKotlinExternals=true
+```
+
+The version of dukat can be specified in build.gradle.kts by adding the following:
+```
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
+...
+NodeJsRootPlugin.apply(project).apply {
+    versions.dukat.version = "SPECIFIC-VERSION"
+}
+```
+
 # How to setup and build
 
 1. clone this project
