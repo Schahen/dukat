@@ -29,7 +29,7 @@
     "commander": "^4.0.1",
     "moment": "^2.24.0",
     "react": "17.0.1",
-    "react-native": "^0.64.0",
+    "react-native": "^0.64.1",
     "rxjs": "^6.5.3",
     "tslib": "^1.10.0",
     "vue": "^2.6.10"
